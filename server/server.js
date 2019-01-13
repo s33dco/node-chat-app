@@ -14,14 +14,13 @@ io.on('connection', (socket) => {								// listens for connection
 
 	console.log('new user connected');
 
-	socket.emit('newMessage', {
-		from: 'Frank',
-		text:	'What time for Dinner',
-		createdAt : new Date()
-	});
-
-	socket.on('createMessage', (message) => {			// listener
+	socket.on('createMessage', (message) => {			// listener for message created
 		console.log(`createMessage`, message);
+		io.emit('newMessage', {											// emit to all connected
+			from: message.from,
+			text: message.text,
+			createdAt: new Date().getTime()
+		})
 	})
 
 	socket.on('disconnect', () => {              // listens for disconnect
