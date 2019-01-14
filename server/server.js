@@ -15,13 +15,14 @@ io.on('connection', (socket) => {								// listens for connection
 
 	console.log('new user connected');
 
-	socket.emit('newMessage', generateMessage('tony','new message for you'));
+	socket.emit('newMessage', generateMessage('admin','welcome to the chat app'));
 
 	socket.broadcast.emit('newMessage', generateMessage('admin','new user joined chat app'));
 
-	socket.on('createMessage', (message) => {			// listener for message created
+	socket.on('createMessage', (message, callback) => {			// listener for createMessage
 		console.log(`createMessage`, message);
-		io.emit('newMessage',generateMessage(message.from, message.text));	// emit to all connected
+		io.emit('newMessage',generateMessage(message.from, message.text)); // emit to other sockets connected
+		callback('this is from the server');																											// callback (2nd arguement) 
 	})
 
 	socket.on('disconnect', () => {              // listens for disconnect
