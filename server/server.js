@@ -14,6 +14,18 @@ io.on('connection', (socket) => {								// listens for connection
 
 	console.log('new user connected');
 
+	socket.emit('newMessage', {
+		from: "admin",
+		text: "welcome to the chat app",
+		createdAt: new Date().getTime()
+	})
+
+	socket.broadcast.emit('newMessage', {
+		from: "admin",
+		text: "new user joined chat app",
+		createdAt: new Date().getTime()
+	})
+
 	socket.on('createMessage', (message) => {			// listener for message created
 		console.log(`createMessage`, message);
 		io.emit('newMessage', {											// emit to all connected
@@ -21,6 +33,11 @@ io.on('connection', (socket) => {								// listens for connection
 			text: message.text,
 			createdAt: new Date().getTime()
 		})
+		// socket.broadcast.emit('newMessage', {					// broadcast to all other sockets
+		// 	from: message.from,
+		// 	text: message.text,
+		// 	createdAt: new Date().getTime()
+		// })
 	})
 
 	socket.on('disconnect', () => {              // listens for disconnect
