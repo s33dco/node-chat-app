@@ -31,6 +31,8 @@ io.on('connection', (socket) => {								// listens for connection
 		callback();
 	});
 
+	// above join has access to params - how to persist this data, vila socket.id 
+
 	socket.on('createMessage', (message, callback) => {			// listener for createMessage
 		console.log(`createMessage`, message);
 		io.emit('newMessage',generateMessage(message.from, message.text)); // emit to other sockets connected
