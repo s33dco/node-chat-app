@@ -5,11 +5,14 @@ const socketIO  = require('socket.io');
 const port      = process.env.PORT || 3000;
 const {generateMessage, generateLocationMessage} = require('./utils/message');
 const {isRealString} = require('./utils/validation');
+const {Users} = require('./utils/users');
 const publicPath = path.join(__dirname, '/../public');
 
 let app = express();
 let server = http.createServer(app);
 let io = socketIO(server);
+let users = new Users();
+
 app.use(express.static(publicPath));
 
 // io.emit - sends to all Connected or io.to(params.room).emit
@@ -20,10 +23,17 @@ io.on('connection', (socket) => {								// listens for connection
 
 	socket.on('join', (params, callback) => {
 		if (!isRealString(params.name) && !isRealString(params.room)) {
-			callback('name and room name are required.')
+			 return callback('name and room name are required.')
 		}
 
 		socket.join(params.room);
+		users.removeUser(socket.id);
+		users.addUser(socket.id, params.name, params.room);
+
+		console.log(`${params.name} has joined the ${params.room} room`);
+
+		io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+
 		socket.emit('newMessage', generateMessage('admin',`Welcome to the ${params.room} room ${params.name}.`));
 		socket.broadcast.to(params.room).emit('newMessage', generateMessage('admin',`${params.name} joins the conversation...`));
 		// socket.leave(params.room);
@@ -31,7 +41,7 @@ io.on('connection', (socket) => {								// listens for connection
 		callback();
 	});
 
-	// above join has access to params - how to persist this data, vila socket.id 
+	// above join has access to params - how to persist this data, vila socket.id
 
 	socket.on('createMessage', (message, callback) => {			// listener for createMessage
 		console.log(`createMessage`, message);
@@ -44,7 +54,13 @@ io.on('connection', (socket) => {								// listens for connection
 	});
 
 	socket.on('disconnect', () => {              // listens for disconnect
-		console.log('user has disconnected');
+		let user = users.removeUser(socket.id);
+
+		if (user) {
+			io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+			io.to(user.room).emit('newMessage', generateMessage('admin', `${user.name} has left the room`));
+		}
+
 	})
 });
 
