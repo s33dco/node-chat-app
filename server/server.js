@@ -11,7 +11,7 @@ const publicPath = path.join(__dirname, '/../public');
 let app = express();
 let server = http.createServer(app);
 let io = socketIO(server);
-let users = new Users();
+let users = new Users();		// make instance of Users....
 
 app.use(express.static(publicPath));
 
@@ -27,15 +27,15 @@ io.on('connection', (socket) => {								// listens for connection
 		}
 
 		socket.join(params.room);
-		users.removeUser(socket.id);
-		users.addUser(socket.id, params.name, params.room);
+		users.removeUser(socket.id);														// remove user from array (incase room change)
+		users.addUser(socket.id, params.name, params.room);			// add user to array
 
 		console.log(`${params.name} has joined the ${params.room} room`);
 
-		io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+		io.to(params.room).emit('updateUserList', users.getUserList(params.room)); // emit updated user list to everone in the room
 
-		socket.emit('newMessage', generateMessage('admin',`Welcome to the ${params.room} room ${params.name}.`));
-		socket.broadcast.to(params.room).emit('newMessage', generateMessage('admin',`${params.name} joins the conversation...`));
+		socket.emit('newMessage', generateMessage('admin',`Welcome to the ${params.room} room ${params.name}.`));									// send to user on socket
+		socket.broadcast.to(params.room).emit('newMessage', generateMessage('admin',`${params.name} joins the conversation...`));	// send to all other sockets in same room
 		// socket.leave(params.room);
 
 		callback();
@@ -54,11 +54,11 @@ io.on('connection', (socket) => {								// listens for connection
 	});
 
 	socket.on('disconnect', () => {              // listens for disconnect
-		let user = users.removeUser(socket.id);
+		let user = users.removeUser(socket.id);									// variable for removed user, removeUser deletes from array and returns user...
 
-		if (user) {
-			io.to(user.room).emit('updateUserList', users.getUserList(user.room));
-			io.to(user.room).emit('newMessage', generateMessage('admin', `${user.name} has left the room`));
+		if (user) {																							// if there was a user, ie one removed....
+			io.to(user.room).emit('updateUserList', users.getUserList(user.room));					// emit event to update user list to all in room
+			io.to(user.room).emit('newMessage', generateMessage('admin', `${user.name} has left the room`)); // send message to all in room
 		}
 
 	})

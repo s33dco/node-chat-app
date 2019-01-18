@@ -36,7 +36,7 @@ socket.on('disconnect', function () {         // listens for disconnection
   console.log('Disconnected from server');
 });
 
-socket.on('updateUserList', function (users) {
+socket.on('updateUserList', function (users) { // listen for update users event.
   let ol = jQuery('<ol></ol>');
   users.forEach(function (user) {
     ol.append(jQuery('<li></li>').text(user));
