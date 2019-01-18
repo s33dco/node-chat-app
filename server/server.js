@@ -44,13 +44,23 @@ io.on('connection', (socket) => {								// listens for connection
 	// above join has access to params - how to persist this data, vila socket.id
 
 	socket.on('createMessage', (message, callback) => {			// listener for createMessage
-		console.log(`createMessage`, message);
-		io.emit('newMessage',generateMessage(message.from, message.text)); // emit to other sockets connected
+
+		let user = users.getUser(socket.id);
+
+		if (user && isRealString(message.text)) {
+			io.to(user.room).emit('newMessage',generateMessage(user.name, message.text)); // emit to other sockets connected
+
+		}
+		console.log(`${user.name}: ${message.text}`)
 		callback();																											// callback (2nd arguement)
 	})
 
 	socket.on('createLocationMessage', (coords) => {				// listener
-		io.emit('newLocationMessage', generateLocationMessage('admin', coords.latitude, coords.longitude));
+		let user = users.getUser(socket.id);
+		if (user){
+			io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude));
+		}
+
 	});
 
 	socket.on('disconnect', () => {              // listens for disconnect
@@ -59,6 +69,7 @@ io.on('connection', (socket) => {								// listens for connection
 		if (user) {																							// if there was a user, ie one removed....
 			io.to(user.room).emit('updateUserList', users.getUserList(user.room));					// emit event to update user list to all in room
 			io.to(user.room).emit('newMessage', generateMessage('admin', `${user.name} has left the room`)); // send message to all in room
+			console.log(`${user.name} has left the ${user.room} room`)
 		}
 
 	})
